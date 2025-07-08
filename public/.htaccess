@@ -1,0 +1,139 @@
+# OpenRouter Alternative - Apache Configuration
+# URL rewriting and security settings for cPanel shared hosting
+
+# Enable URL rewriting
+RewriteEngine On
+
+# Security Headers
+<IfModule mod_headers.c>
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options nosniff
+    
+    # Prevent clickjacking
+    Header always set X-Frame-Options DENY
+    
+    # XSS Protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Remove server information
+    Header unset Server
+    Header unset X-Powered-By
+    
+    # CORS headers (if needed)
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-LA-Cookie, X-CF-Clearance"
+    Header always set Access-Control-Max-Age "86400"
+</IfModule>
+
+# HTTPS Redirection (uncomment if HTTPS is available)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Handle CORS preflight requests
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Block access to sensitive files
+<FilesMatch "\.(env|sql|log|md|txt|yml|yaml|json|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to directories
+RedirectMatch 404 /\..*$
+RedirectMatch 404 /config/
+RedirectMatch 404 /app/
+RedirectMatch 404 /routes/
+RedirectMatch 404 /deployment/
+RedirectMatch 404 /python-backend/
+
+# Prevent access to PHP files in subdirectories
+<FilesMatch "\.php$">
+    <If "%{REQUEST_URI} !~ m#^/index\.php#">
+        Order allow,deny
+        Deny from all
+    </If>
+</FilesMatch>
+
+# Route all requests to index.php (except existing files)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Compression (if mod_deflate is available)
+<IfModule mod_deflate.c>
+    # Compress JSON responses
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/javascript
+</IfModule>
+
+# Caching for static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Cache JSON responses for 5 minutes
+    ExpiresByType application/json "access plus 5 minutes"
+    
+    # Cache other static files
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
+
+# Set proper MIME types
+<IfModule mod_mime.c>
+    AddType application/json .json
+    AddType text/plain .txt
+    AddType text/markdown .md
+</IfModule>
+
+# Limit request size (adjust as needed)
+LimitRequestBody 10485760  # 10MB
+
+# PHP Configuration (if allowed by hosting provider)
+<IfModule mod_php.c>
+    # Hide PHP version
+    php_flag expose_php off
+    
+    # Error handling
+    php_flag display_errors off
+    php_flag log_errors on
+    
+    # Memory and execution limits
+    php_value memory_limit 128M
+    php_value max_execution_time 30
+    php_value max_input_time 30
+    
+    # Upload limits
+    php_value post_max_size 8M
+    php_value upload_max_filesize 2M
+    php_value max_file_uploads 20
+    
+    # Session settings
+    php_value session.cookie_httponly 1
+    php_value session.cookie_secure 1
+    php_value session.use_strict_mode 1
+</IfModule>
+
+# Error pages (customize as needed)
+ErrorDocument 400 /index.php
+ErrorDocument 401 /index.php
+ErrorDocument 403 /index.php
+ErrorDocument 404 /index.php
+ErrorDocument 405 /index.php
+ErrorDocument 429 /index.php
+ErrorDocument 500 /index.php
+ErrorDocument 502 /index.php
+ErrorDocument 503 /index.php

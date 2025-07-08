@@ -1,0 +1,37 @@
+# Python Backend Dependencies for OpenRouter Alternative
+# Based on lmarena2api requirements with additional dependencies
+
+# Web Framework
+fastapi>=0.68.0
+uvicorn>=0.15.0
+
+# HTTP Client
+requests>=2.25.1
+httpx>=0.24.0
+
+# Data Validation
+pydantic>=1.8.2
+
+# JSON handling
+orjson>=3.8.0
+
+# Environment variables
+python-dotenv>=0.19.0
+
+# Logging
+structlog>=21.1.0
+
+# Date/time handling
+python-dateutil>=2.8.2
+
+# Async support
+asyncio-throttle>=1.0.2
+
+# Security
+cryptography>=3.4.8
+
+# Optional: For enhanced performance
+# uvloop>=0.16.0  # Unix only
+
+# Optional: For monitoring
+# prometheus-client>=0.11.0
